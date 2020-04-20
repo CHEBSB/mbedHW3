@@ -33,24 +33,23 @@ Timeout tout;	// counting 10 sec
 bool Tout = false;
 void changeMode() { Tout = true; }
 
-Serial pc(USBTX, USBRX);	// output data to pc for Python
-uint_8 x1[100], x2[100], y1[100], y2[100];
-uint_8 z1[100], z2[100];	// store all data
 double tx[100], ty[100], tz[100];
-bool tiltArray[100];
+bool tiltArray[100];	// for python plot
 int i = 0;
 
+InterruptIn sw(SW2);
 Thread thre;	// to release queue
-Eventqueue tiltQ;	// to call interrupt of tilt
-DigitalOut led(LED2);
+EventQueue tiltQ;	// to call interrupt of tilt
+DigitalOut led(LED2);	// the LED to blink
 /* tilt is that |X| > 0.5 or |Y| > 0.5 */
+void TenSRec();	// 10 sec accelero recording
 
+
+uint8_t who_am_i, data[2], res[6];
+int16_t acc16;
+float t[3];
 int main() {
 	pc.baud(115200);
-
-	uint8_t who_am_i, data[2], res[6];
-	int16_t acc16;
-	 float t[3];
 
 	// Enable the FXOS8700Q
 	FXOS8700CQ_readRegs( FXOS8700Q_CTRL_REG1, &data[1], 1);
@@ -61,50 +60,51 @@ int main() {
 	 FXOS8700CQ_readRegs(FXOS8700Q_WHOAMI, &who_am_i, 1);
 
 	thre.start(callback(&tiltQ, &EventQueue::dispatch_forever));
-
 	pc.printf("Here is %x\r\n", who_am_i);
+	sw.rise(tiltQ.event(TenSRec));
+	 
+}
+void TenSRec() {
 	tout.attach(&changeMode, 10.0);	// start 10 sec countdown
-	 while (!Tout) {
+	while (!Tout) {
 
 		FXOS8700CQ_readRegs(FXOS8700Q_OUT_X_MSB, res, 6);
 
-		 acc16 = (res[0] << 6) | (res[1] >> 2);
-		 if (acc16 > UINT14_MAX/2)
-		    acc16 -= UINT14_MAX;
-		 t[0] = ((float)acc16) / 4096.0f;
+		acc16 = (res[0] << 6) | (res[1] >> 2);
+		if (acc16 > UINT14_MAX / 2)
+			acc16 -= UINT14_MAX;
+		t[0] = ((float)acc16) / 4096.0f;
 
-		 acc16 = (res[2] << 6) | (res[3] >> 2);
-		 if (acc16 > UINT14_MAX/2)
-		   acc16 -= UINT14_MAX;
-		 t[1] = ((float)acc16) / 4096.0f;
+		acc16 = (res[2] << 6) | (res[3] >> 2);
+		if (acc16 > UINT14_MAX / 2)
+			acc16 -= UINT14_MAX;
+		t[1] = ((float)acc16) / 4096.0f;
 
-		 acc16 = (res[4] << 6) | (res[5] >> 2);
-		 if (acc16 > UINT14_MAX/2)
-		   acc16 -= UINT14_MAX;
-		 t[2] = ((float)acc16) / 4096.0f;
+		acc16 = (res[4] << 6) | (res[5] >> 2);
+		if (acc16 > UINT14_MAX / 2)
+			acc16 -= UINT14_MAX;
+		t[2] = ((float)acc16) / 4096.0f;
 
-		 printf("FXOS8700Q ACC: X=%1.4f(%x%x) Y=%1.4f(%x%x) Z=%1.4f(%x%x)\r\n",\
-			 t[0], res[0], res[1],\
-			 t[1], res[2], res[3],\
-			 t[2], res[4], res[5]\
-		 );		// this print to screen
+		printf("FXOS8700Q ACC: X=%1.4f(%x%x) Y=%1.4f(%x%x) Z=%1.4f(%x%x)\r\n", \
+			t[0], res[0], res[1], \
+			t[1], res[2], res[3], \
+			t[2], res[4], res[5]\
+		);		// this print to screen
 
-		 x1[i] = res[0]; x2[i] = res[1];
-		 y1[i] = res[2]; y2[i] = res[3];
-		 z1[i] = res[4]; z2[i] = res[5]
-		 tx[i] = t[0]; ty[i] = t[1]; tz[i] = t[2];
-		 if ((t[0] > 0.5 || t[0] < -0.5) || (t[1] > 0.5 || t[1] < -0.5))
-			  tiltArray[i] = true;
-		 else
-			  tiltArray[i] = false;
-		 i++;
-
+		if (i < 100) {
+			tx[i] = t[0]; ty[i] = t[1]; tz[i] = t[2];
+			if ((t[0] > 0.5 || t[0] < -0.5) || (t[1] > 0.5 || t[1] < -0.5))
+				tiltArray[i] = true;
+			else
+				tiltArray[i] = false;
+			i++;
+		}
 		wait(0.1);
-	 }
+	}
+	/* Then, send data to pc*/
 
-   /* send data to pc */
+	Tout = false;
 }
-
 void FXOS8700CQ_readRegs(int addr, uint8_t * data, int len) {
 	char t = addr;
 	i2c.write(m_addr, &t, 1, true);
