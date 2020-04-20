@@ -29,6 +29,10 @@ int m_addr = FXOS8700CQ_SLAVE_ADDR1;
 void FXOS8700CQ_readRegs(int addr, uint8_t * data, int len);
 void FXOS8700CQ_writeRegs(uint8_t * data, int len);
 
+Timeout tout;	// counting 10 sec
+bool Tout = false;
+void changeMode() { Tout = true; }
+
 int main() {
 
    pc.baud(115200);
@@ -48,7 +52,8 @@ int main() {
    FXOS8700CQ_readRegs(FXOS8700Q_WHOAMI, &who_am_i, 1);
 
    pc.printf("Here is %x\r\n", who_am_i);
-   while (true) {
+   tout.attach(&changeMode, 10.0);	// start 10 sec countdown
+   while (!Tout) {
 
       FXOS8700CQ_readRegs(FXOS8700Q_OUT_X_MSB, res, 6);
 
@@ -73,7 +78,7 @@ int main() {
             t[2], res[4], res[5]\
       );
 
-      wait(1.0);
+      wait(0.1);
    }
 }
 
