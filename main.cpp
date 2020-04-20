@@ -33,8 +33,8 @@ Timeout tout;	// counting 10 sec
 bool Tout = false;
 void changeMode() { Tout = true; }
 
-double tx[100], ty[100], tz[100];
-bool tiltArray[100];	// for python plot
+// double tx[100], ty[100], tz[100];
+bool tiltArray;	// for python plot
 int i = 0;
 
 InterruptIn sw(SW2);
@@ -67,10 +67,6 @@ int main() {
 void TenSRec() {
 	tout.attach(&changeMode, 10.0);	// start 10 sec countdown
 
-
-	
-
-
 	while (!Tout) {
 
 		FXOS8700CQ_readRegs(FXOS8700Q_OUT_X_MSB, res, 6);
@@ -97,18 +93,23 @@ void TenSRec() {
 		);		// this print to screen*/
 
 		if (i < 100) {
-			tx[i] = t[0]; ty[i] = t[1]; tz[i] = t[2];
-			if ((t[0] > 0.5 || t[0] < -0.5) || (t[1] > 0.5 || t[1] < -0.5))
-				tiltArray[i] = true;
+		/*	tx[i] = t[0];
+			ty[i] = t[1];
+			tz[i] = t[2];*/
+			if ((t[0] > 0.5 || t[0] < -0.5) || (t[1] > 0.5 || t[1] < -0.5)) {
+				tiltArray = true;
+				led = !led;
+			}
 			else
-				tiltArray[i] = false;
+				tiltArray = false;
+			pc.printf("%1.4f %1.4f %1.4f %d\r\n", t[0], t[1], t[2], tiltArray);
 			i++;
 		}
-		wait_us(0.1f);
+		wait(0.1f);
 	}
 	/* Then, send data to pc*/
-	for (int i = 0; i < 100; i++)
-		pc.printf("%1.4f %1.4f %1.4f %d\r\n", tx[i], ty[i], tz[i], tiltArray[i]);
+	/*for (int i = 0; i < 100; i++)
+		pc.printf("%1.4f %1.4f %1.4f %d\r\n", tx[i], ty[i], tz[i], tiltArray[i]);*/
 	Tout = false;	// reset Tout so it can run again
 }
 void FXOS8700CQ_readRegs(int addr, uint8_t * data, int len) {
