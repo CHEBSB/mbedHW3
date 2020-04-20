@@ -102,8 +102,9 @@ void TenSRec() {
 		wait(0.1);
 	}
 	/* Then, send data to pc*/
-
-	Tout = false;
+	for (int i = 0; i < 100; i++)
+		pc.print("%1.4f %1.4f %1.4f %d\r\n", tx[i], ty[i] tz[i], tiltArray[i]);
+	Tout = false;	// reset Tout so it can run again
 }
 void FXOS8700CQ_readRegs(int addr, uint8_t * data, int len) {
 	char t = addr;

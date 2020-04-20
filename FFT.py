@@ -1,0 +1,34 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import serial
+import time
+
+t = np.arange(0,10,0.1) # time vector; create Fs samples between 0 and 0.1 sec.
+x = np.arange(-1,1,0.02) 
+y = np.arange(-1,1,0.02) 
+z = np.arange(-1,1,0.02) 
+tilt = np.arange(0,1,0.01)
+n = len(y) # length of the signal
+
+serdev = '/dev/ttyACM0'
+s = serial.Serial(serdev, 115200)
+for i in range(n):    
+    line=s.readline() # Read an echo string from K66F terminated with '\n'
+    # print line
+    # seperate the line into 4 parts #
+    Tp = line.split(' ')
+    x[i] = float(Tp[0])
+    y[i] = float(Tp[1])
+    z[i] = float(Tp[2])
+    tilt[i] = int(Tp[3])
+    #
+    
+fig, ax = plt.subplots(2, 1)
+ax[0].plot(t,y)
+ax[0].set_xlabel('Time')
+ax[0].set_ylabel('Amplitude')
+ax[1].plot(frq,abs(Y),'r') # plotting the spectrum
+ax[1].set_xlabel('Freq (Hz)')
+ax[1].set_ylabel('|Y(freq)|')
+plt.show()
+s.close()
