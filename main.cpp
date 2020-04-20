@@ -52,20 +52,25 @@ int main() {
 	pc.baud(115200);
 
 	// Enable the FXOS8700Q
-	FXOS8700CQ_readRegs( FXOS8700Q_CTRL_REG1, &data[1], 1);
+	FXOS8700CQ_readRegs(FXOS8700Q_CTRL_REG1, &data[1], 1);
 	data[1] |= 0x01;
 	data[0] = FXOS8700Q_CTRL_REG1;
-	 FXOS8700CQ_writeRegs(data, 2);
+	FXOS8700CQ_writeRegs(data, 2);
 	// Get the slave address
-	 FXOS8700CQ_readRegs(FXOS8700Q_WHOAMI, &who_am_i, 1);
+	FXOS8700CQ_readRegs(FXOS8700Q_WHOAMI, &who_am_i, 1);
 
 	thre.start(callback(&tiltQ, &EventQueue::dispatch_forever));
-	pc.printf("Here is %x\r\n", who_am_i);
+//	pc.printf("Here is %x\r\n", who_am_i);
 	sw.rise(tiltQ.event(TenSRec));
 	 
 }
 void TenSRec() {
 	tout.attach(&changeMode, 10.0);	// start 10 sec countdown
+
+
+	
+
+
 	while (!Tout) {
 
 		FXOS8700CQ_readRegs(FXOS8700Q_OUT_X_MSB, res, 6);
@@ -85,11 +90,11 @@ void TenSRec() {
 			acc16 -= UINT14_MAX;
 		t[2] = ((float)acc16) / 4096.0f;
 
-		printf("FXOS8700Q ACC: X=%1.4f(%x%x) Y=%1.4f(%x%x) Z=%1.4f(%x%x)\r\n", \
+	/*	printf("FXOS8700Q ACC: X=%1.4f(%x%x) Y=%1.4f(%x%x) Z=%1.4f(%x%x)\r\n", \
 			t[0], res[0], res[1], \
 			t[1], res[2], res[3], \
 			t[2], res[4], res[5]\
-		);		// this print to screen
+		);		// this print to screen*/
 
 		if (i < 100) {
 			tx[i] = t[0]; ty[i] = t[1]; tz[i] = t[2];
@@ -99,11 +104,11 @@ void TenSRec() {
 				tiltArray[i] = false;
 			i++;
 		}
-		wait(0.1);
+		wait_us(0.1f);
 	}
 	/* Then, send data to pc*/
 	for (int i = 0; i < 100; i++)
-		pc.print("%1.4f %1.4f %1.4f %d\r\n", tx[i], ty[i] tz[i], tiltArray[i]);
+		pc.printf("%1.4f %1.4f %1.4f %d\r\n", tx[i], ty[i], tz[i], tiltArray[i]);
 	Tout = false;	// reset Tout so it can run again
 }
 void FXOS8700CQ_readRegs(int addr, uint8_t * data, int len) {
