@@ -33,8 +33,8 @@ Timeout tout;	// counting 10 sec
 bool Tout = false;
 void changeMode() { Tout = true; }
 
-float x[100], y[100], z[100];
-bool tiltA[100];	// for python plot
+float tx[100], ty[100], tz[100];
+bool tiltArray[100];	// for python plot
 int i = 0;
 
 InterruptIn sw(SW2);
@@ -93,22 +93,22 @@ void TenSRec() {
 			);		*/
 
 		if (i < 100) {
-			x[i] = t[0];
-			y[i] = t[1];
-			z[i] = t[2];
+			tx[i] = t[0];
+			ty[i] = t[1];
+			tz[i] = t[2];
 			if (t[0] > 0.5 || t[0] < -0.5 || t[1] > 0.5 || t[1] < -0.5) {
-				tiltA[i] = true;
+				tiltArray[i] = true;
 				led = !led;
 			}
 			else
-				tiltA[i] = false;
+				tiltArray[i] = false;
 			i++;
 		}
 		wait(0.1f);
 	}
 	/* Then, send data to pc*/
 	for (int i = 0; i < 100; i++) {
-		pc.printf("X=%1.3f Y=%1.3f Z=%1.3f T=%d\r\n", x[i], y[i], z[i], tiltA[i]);
+		pc.printf("%1.3f %1.3f %1.3f %d\r\n", tx[i], ty[i], tz[i], tiltArray[i]);
 		wait_us(0.05f);
 	}
 	Tout = false;	// reset Tout so it can run again

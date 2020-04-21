@@ -24,14 +24,14 @@ for i in range(n):
     #
     
 fig, ax = plt.subplots(2, 1)
-ax[0].plot(t,x)
-ax[0].plot(t,y)
-ax[0].plot(t,z)
+ax[0].plot(t,x, 'r')
+ax[0].plot(t,y, 'y')
+ax[0].plot(t,z, 'b')
 ax[0].set_xlim(0, 10)
-ax[0].legend(loc='upper left', frameon = False)
+ax[0].legend("xyz",loc='center left', bbox_to_anchor=(1, 0.5))
 ax[0].set_xlabel('Time')
 ax[0].set_ylabel('Acc Vector')
-ax[1].plot(t,tilt,'r') # plotting the spectrum
+ax[1].stem(t,tilt,'r') # plotting the spectrum
 ax[1].set_xlim(0, 10)
 ax[1].set_xlabel('Time')
 ax[1].set_ylabel('tilt')
